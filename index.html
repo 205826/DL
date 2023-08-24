@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8">
+		<title>Задания и решения OTP</title>
+<!--
+ __/\\\\\\\\\\\\_____/\\\_____________________________/\\\\\\\\\\\\\\\________________        
+  _\/\\\////////\\\__\/\\\_______________________/\\\_\///////\\\/////___/\\\__________       
+   _\/\\\______\//\\\_\/\\\____________________/\\\//________\/\\\_______\////\\\_______      
+    _\/\\\_______\/\\\_\/\\\_________________/\\\//___________\/\\\__________\////\\\____     
+     _\/\\\_______\/\\\_\/\\\______________/\\\//______________\/\\\_____________\////\\\_    
+      _\/\\\_______\/\\\_\/\\\_____________\////\\\_____________\/\\\______________/\\\//__   
+       _\/\\\_______/\\\__\/\\\________________\////\\\__________\/\\\___________/\\\//_____  
+        _\/\\\\\\\\\\\\/___\/\\\\\\\\\\\\\\\_______\////\\\_______\/\\\________/\\\//________ 
+         _\////////////_____\///////////////___________\///________\///________\///___________
+-->
+		  <script>
+			let tooltipElem;
+
+			document.onmouseover = function(event) {
+			  let target = event.target;
+
+			  // если у нас есть подсказка...
+			  let tooltipHtml = target.dataset.tooltip;
+			  if (!tooltipHtml) return;
+
+			  // ...создадим элемент для подсказки
+
+			  tooltipElem = document.createElement('div');
+			  tooltipElem.className = 'tooltip';
+			  tooltipElem.innerHTML = tooltipHtml;
+			  document.body.append(tooltipElem);
+
+			  // спозиционируем его сверху от аннотируемого элемента (top-center)
+			  let coords = target.getBoundingClientRect();
+
+			  let left = coords.left + (target.offsetWidth - tooltipElem.offsetWidth) / 2;
+			  if (left < 0) left = 0; // не заезжать за левый край окна
+
+			   let top = coords.top + target.offsetHeight - 10;
+			  if (top > innerHeight- tooltipElem.offsetHeight) { // если подсказка не помещается сверху, то отображать её снизу
+			   top = coords.top - tooltipElem.offsetHeight -10;
+			  }
+
+			  tooltipElem.style.left = left + 'px';
+			  tooltipElem.style.top = top + 'px';
+			};
+
+			document.onmouseout = function(e) {
+
+			  if (tooltipElem) {
+				tooltipElem.remove();
+				tooltipElem = null;
+			  }
+
+			};
+		</script>
+		<script type="text/javascript">
+			var data;
+			var test='_';
+			
+			function onload() {
+				fetch('beautiful_output.json').then(response => response.text()).then((data) => {
+					on_data_load(data);
+				});
+			}
+			
+			function on_data_load(s) {
+				data = JSON.parse(s);
+				document.getElementById('test_name').innerHTML='<option value="" selected>Выберите название теста</option>'+Object.keys(data).filter(x=>x[0]!='_').map(x=>'<option value="'+x+'">'+x+'</option>').join('')
+				Object.keys(data).map(x=>data[x]=data[x].sort((a,b)=>a.number-b.number));
+				onupdate();
+			}
+			
+			function color_gen(x) { return '123456789abcdef'[Math.floor(14-(x*14))]+'123456789abcdef'[Math.floor(14-((1-x)*14))]+'1' }
+			
+			function span_gen(type, solutions, f) {
+				var probability=0.5;
+				var max_value='-';
+				var d = {};
+				var max_result=-1;
+				solutions.map(s=>{
+					if(!d[s.value] ) d[s.value] = [];
+					d[s.value].push(s.result/s.result_max);
+					if (data._error_correction_) {
+						max_value=s.value;
+						probability=(max_value!='UNCHECKED'?1:0);
+					} else if (s.result>max_result) {
+						max_result=s.result;
+						max_value=s.value;
+						if (type!='strings')
+							probability=(max_value=='CHECKED'?max_result/s.result_max:1-max_result/s.result_max);
+					}
+				});
+				var text = '';
+				if (type!='strings') {
+					if (d['CHECKED'] && d['CHECKED'].length) {
+						text+='Выбравшие этот пункт прошли тест на '+d['CHECKED'].sort((a,b)=>b-a).map(x=>Math.round(x*100)+'%').join(' ') +'<br>';
+					}
+					if (d['UNCHECKED'] && d['UNCHECKED'].length) {
+						text+='Не выбравшие этот пункт прошли тест на '+d['UNCHECKED'].sort((a,b)=>b-a).map(x=>Math.round(x*100)+'%').join(' ') +'<br>';
+					}
+				}else {
+					Object.keys(d).map(x=>{
+						text+='Написавшие &#34;'+x+'&#34; прошли тест на '+d[x].sort((a,b)=>b-a).map(x=>Math.round(x*100)+'%').join(' ') +'<br>';
+					});
+				}
+				if (data._error_correction_)
+					text+='<hr>Значения ответов на тесты искажены в пользу верных'
+				
+				if (f)
+					return max_value;
+				else
+					return '<span style="color: #'+color_gen(probability)+';"  data-tooltip="'+text+'">['+Math.round(probability*100)+'%]</span>';
+			}
+			
+			function regen() {
+				if (!test) {
+					document.getElementById('questions').innerHTML='';
+					return;
+				}
+				document.getElementById('questions').innerHTML=data[test].map(x=>''+
+					'<div>'+
+						'<div class="question_number"><div>'+x.number+'</div></div>'+
+						x.text.split('\n').map(y=>'<p>'+y+'</p>').join('')+
+						(x.image?'<p style="text-align: center;"><img src="data:image/png;base64,'+data['_image_'][x.image]+'" alt="'+x.image+'" /></p>':'')+
+						'<div class="answers">'+
+							x.answers.map(y=>''+
+							'<div>'+
+								span_gen(x.type, y.solutions)+
+								'<div>'+
+									(!y.text && !y.image?span_gen(x.type, y.solutions,1):'')+
+									y.text+
+									(y.image?'<img src="data:image/png;base64,'+data['_image_'][y.image]+'" alt="'+y.image+'" />':'')+
+								'</div>'+
+							'</div>').join('')+
+						'</div>'+
+						'<div style="clear: left;"></div>'+
+					'</div>').join('');
+			}
+			
+			function onupdate() {
+				if (test != document.getElementById('test_name').value) {
+					test = document.getElementById('test_name').value;
+					regen();
+				}
+				console.log(test);
+			}
+		</script>
+		<style>
+			body {
+				background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAAhdEVYdENyZWF0aW9uIFRpbWUAMjAyMzowODoyMiAxODowMzoyMJWLp3MAAAPHSURBVFhHxZgJcuMgEEWxs++HSHL/q6Wyb44nj6nnaiGQLDmZ+VVdoAaaTy9I9uL6+nq9WCwSoLX/v7Ber7PA4+vrKy1RSuy3ZJs9wHK57Dzn/s3NzZqBjSJMKMHJfhvuQZs92GH7LZKtwTktiR6YK6WzNiEu2zkS185BuY7nb8J/T23rQAl0UwR7UyWupQXLmFf2T05O0sXFRTo+Pk77+/tZx1iUf4Vewh0cHGyInZ6eZqKXl5e5z5gnGyLc0s9Bj+BqtdoY/vj4yJW0t7eXSZ+fn2fCZ2dnHbLANbasAbuS7BGEEMLmLy8v6f7+Pj0/P6f39/c8jmePjo4yWT2LjvmSYdxDoNuFZIegHpEMXsP46+trenx8THd3d7l9e3vLepKZOVdXVzlvBXpIm8e7kOx5EBBaDBImvQPQQf7p6Sk9PDxkDzOXAyCCA3hIPAxJMIdklSB5iEAQwTAkJQoYhyAeRUwLQD+mBelA2MFUkj2CbKKngMWgYYkihBK995YHUS9J+uTkHE9WPQg+Pz9zS4ityBogFBGf8SQEaQEkp3qySdAw4w28CLY16jzWkYPYAOgJ95TCaRJkseGR4BTgdTxmDltI9CFN1dNHhlAlaJisZghuSxKvkxaQ03NUNQWF0AeSBEMkNwTNkwg2U+9mLbhJDCu68gqicHyG4NjBOx8LJRjDi4Tak9fAPITN2NSiYo1hBc7Dk+ixixOGsLi9vV2bJ7SxCqNh9GXFAufouZhzEIlwPePaBOWeCtEbjJukCFc0IjACauQMozbK9T7X7EZ0CNbysIUaOdbrOcaHNvd+1U4J9T0PthZEOOfw8HBTEJKLnquBtZAjV1tVzLNF2SGI0TGCjCNDBTEatu/NWc9ayA4hE+T0Gh0yLnm/97xKuDosiDFygNeobyk91UIe3cZoCQ1DjOsCbGsHh0CS+RzWqNQwTL+ABAgn34TeZ9uEVTjP1+jYx8gkgoANEHNO3VTgQQ82lIeTCYJIqEbOkEWJYA1hNjW4DVqYRRCwSYscoErxjHNKsuhND+YhcVzMJjgEryB+NPH9R78ka2uxWHRlVf8KwejZGlmLgjDzMcL8VpgzwdKtu4Lc4lcfwh0JCYAXJctvavrxmxPvVUPMCX6KJLa0R/jIM371eS2hgwhkeU3iVeayBl2J/LkV4z+HLGtaqNkjxAiXNHu6Px7nAIQe5DccBN1AgnPQOljNnvMYQwgvOq8dx3kd9v4Cju1cbLu+PBDr0KnPHuRffgkC+0wa2mhsfBdEgplNZF3r12Rs/CckpZT+ABQ9dqlIdgmDAAAAAElFTkSuQmCC) center/40px;
+				background-repeat: repeat;
+			}
+			body > div {
+				max-width: 900px;
+				margin: 10px auto 25px auto;
+				font-size: 14px;
+				background: #6663;
+				backdrop-filter: blur(5px);
+				box-shadow: 0px 0px 4px 5px #0004;
+			}
+			.myh1 {
+				height: 100%;
+				padding: 10px 5px 10px 20px;
+				position: relative;
+				border-bottom: solid 2px #ccc3;
+			}
+			.myh1 > input {
+				margin: 6.5px;
+				vertical-align: top;
+				float: right;
+				color: #fff;
+				background-color: #0002;
+				width: calc(40% - 20px);
+				min-width: 150px;
+				display: none;
+			}
+			#test_name {
+				width: calc(60% - 20px);
+				min-width: 150px;
+				font-size: 25px;
+				font-size: 2em;
+				color: #fff;
+				background-color: #0002;
+			}
+			#test_name option {
+				color: #fff;
+				background: #000;
+			}
+			#questions {
+				padding: 15px;
+			}
+			#questions img {
+				width: 75%;
+				box-shadow: 0 0 5px 1px white;
+				filter: brightness(0.8) invert(1);
+			}
+			#questions > div {
+				background: #0001;
+				padding: 5px;
+				border: solid 1px #ccc3;
+				margin-bottom: 10px;
+			}
+			.question_number {
+				background: #0003;
+				padding:2px;
+				
+			}
+			.question_number div {
+				background: #8883;
+				width: 30px;
+				height: 30px;
+				border-radius: 15px;
+				text-align: center;
+				line-height: 30px;
+			}
+			.answers {
+				
+				
+			}
+			.answers > div{
+				width: 50%;
+				float: left;
+				
+			}
+			.answers > div > span {
+				display: inline-block;
+				vertical-align: top;
+				width: 46px;
+				font-weight: 600;
+				text-align: right;
+				margin-right: 4px;
+			}
+			.answers > div > div {
+				display: inline-block;
+				width: calc(100% - 51px);
+			}
+			    .tooltip {
+					position: fixed;
+					padding: 10px 20px;
+					border: 1px solid #b3c9ce;
+					border-radius: 4px;
+					text-align: center;
+					font: italic 14px/1.3 sans-serif;
+					color: #333;
+					background: #fff;
+					box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+				}
+		</style>
+	</head>
+	<body onload="onload()" style="width:100%;height:100%;font-family:'Open Sans', sans-serif;margin:0;color:#fff;">
+		<div>
+			<div class="myh1">
+				<input type="text" value="" placeholder="Поиск" />
+				<select id="test_name" onchange="onupdate(this)">
+					<option value="" selected>Loading...</option>
+				</select>
+			</div>
+			
+			<div id="questions">
+			</div>
+			<div>
+		</div>
+	</body>
+</html>
+
