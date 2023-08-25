@@ -68,7 +68,7 @@
 			function on_data_load(s) {
 				data = JSON.parse(s);
 				document.getElementById('test_name').innerHTML='<option value="" selected>Выберите название теста</option>'+Object.keys(data).filter(x=>x[0]!='_').map(x=>'<option value="'+x+'">'+x+'</option>').join('')
-				Object.keys(data).map(x=>data[x]=data[x].sort((a,b)=>a.number-b.number));
+				Object.keys(data).filter(x=>x[0]!='_').map(x=>data[x]=data[x].sort((a,b)=>a.number-b.number));
 				onupdate();
 			}
 			
@@ -106,7 +106,7 @@
 					});
 				}
 				if (data._error_correction_)
-					text+='<hr>Значения ответов на тесты искажены в пользу верных'
+					text='';//+='<hr>Значения ответов на тесты искажены в пользу верных'
 				
 				if (f)
 					return max_value;

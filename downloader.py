@@ -17,7 +17,7 @@ from html.parser import HTMLParser
 
 DB_PATH = "./__cache/"
 LINK_LIST_PATH = "./OTP_list.txt"
-EXPORT_FILE_NAME = "./beautiful.json"
+EXPORT_FILE_NAME = "./beautiful_output.json"
 SAVING_EVERY_N = 10
 DEBUG = False
 NEED_PRINT = True
@@ -164,10 +164,6 @@ for i in range(0,len(links)):
     links[i] = {"title": title, "tasks": tasks, "need_resolv": False, "correct_answers": results[0], "total_answers": results[1]}
 
 
-#print("Export json (For what?)...")
-#import json
-#with open("output.json", 'w') as f:
-#    f.write(json.dumps(links, ensure_ascii=False))
 
 print("Downloading iamges...")
 image_dict = {}
@@ -266,8 +262,14 @@ if True:
                     else:
                         print('Undefined type! ', end='')
             task.pop("errors", 0)
-            
+        if ERROR_CORRECTION:
+            solution["correct_answers"] = float(solution["total_answers"])
         print('DONE!')
+
+#print("Export json (For what?)...")
+#import json
+#with open("output.json", 'w') as f:
+#    f.write(json.dumps(links, ensure_ascii=False))
 
 print("Solution to test")
 all_tests = {}
