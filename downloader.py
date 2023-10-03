@@ -17,7 +17,8 @@ from html.parser import HTMLParser
 
 DB_PATH = "./__cache/"
 LINK_LIST_PATH = "./OTP_list.txt"
-EXPORT_FILE_NAME = "./beautiful_output.json"
+EXPORT_JSON_NAME = "./index.json"
+EXPORT_JSON_NAME_GENERATOR = lambda i,name: ("./json/output_"+str(i)+".json", "json/output_"+str(i)+".json"); # (1..n, "Рубежный теортест ...") => save_to, js_path
 SAVING_EVERY_N = 10
 DEBUG = False
 NEED_PRINT = True
@@ -30,6 +31,7 @@ if not NEED_PRINT:
 mydb = FileDB(DB_PATH)
 session = requests.Session()
 
+is_with_answers = {}
 links = [v for v in [line.strip() for line in open(LINK_LIST_PATH, "r")] if v]
 
 need_save=False
@@ -161,7 +163,8 @@ for i in range(0,len(links)):
     print(title+': '+str(results[0])+'/'+str(results[1]))
     if DEBUG:
         print(tasks)
-    links[i] = {"title": title, "tasks": tasks, "need_resolv": False, "correct_answers": results[0], "total_answers": results[1]}
+    links[i] = {"title": title, "tasks": tasks, "correct_answers": results[0], "total_answers": results[1]}
+    is_with_answers[title] = False
 
 
 
@@ -182,16 +185,22 @@ def get_base64_image(url):
         return b
 
 i=1
-for solution in links:
+for solution in links: 
     print(str(i)+'. ', end='')
     i+=1
+    if solution["title"] not in image_dict:
+        image_dict[solution["title"]] = {}
+    def add_img(url):
+        if url not in image_dict[solution["title"]]:
+            image_dict[solution["title"]][url]=get_base64_image(url)
     for task in solution["tasks"]:
         if task["question_img"]:
-            image_dict[task["question_img"]]=get_base64_image(task["question_img"])
+            add_img(task["question_img"])
         for answer in task["answers"]:
             if answer["image"]:
-                image_dict[answer["image"]]=get_base64_image(answer["image"])
+                add_img(answer["image"])
     print('DONE!')
+
 if True:
     print("Error correction...")
 
@@ -220,6 +229,7 @@ if True:
             task["type"] = ttype
             if ERROR_CORRECTION:
                 for error in task["errors"]:
+                    is_with_answers[solution["title"]] = True;
                     if ttype == "multiselect":
                         if error["type"] == "Не выбрано:":
                             t = 0
@@ -262,9 +272,10 @@ if True:
                     else:
                         print('Undefined type! ', end='')
             task.pop("errors", 0)
-        if ERROR_CORRECTION:
-            solution["correct_answers"] = float(solution["total_answers"])
         print('DONE!')
+    for solution in links:
+        if is_with_answers[solution["title"]]:
+            solution["correct_answers"] = float(solution["total_answers"])
 
 #print("Export json (For what?)...")
 #import json
@@ -274,8 +285,8 @@ if True:
 print("Solution to test")
 all_tests = {}
 # {
-#   name: [
-#       {
+#   [
+#      {
 #         type: ""
 #         number: 0
 #         text: ""
@@ -290,7 +301,7 @@ i=1
 for solution in links:
     print(str(i)+'. ', end='')
     i+=1
-    if not (solution["title"] in all_tests):
+    if solution["title"] not in all_tests:
         all_tests[solution["title"]] = []
     j=1
     for task in solution["tasks"]:
@@ -335,13 +346,37 @@ for solution in links:
 
     print("DONE!")
 
-all_tests["_image_"] = image_dict
-all_tests["_error_correction_"] = ERROR_CORRECTION
 
+
+
+print("Saving... ")
+
+index_json = {}
+#{
+#  name: {
+#    json: "js_path"
+#    with_answers: T/F
+#  }
+#}
+i=0
+for name in sorted(all_tests.keys()):
+    if name[0] != '_':
+        i+=1
+        index_json[name] = {"title": name, "json": EXPORT_JSON_NAME_GENERATOR(i, name)[1], "with_answers": is_with_answers[name]}
+print("0. "+EXPORT_JSON_NAME)
 import json
-with open(EXPORT_FILE_NAME, 'w', encoding='utf-8') as f:
-    f.write(json.dumps(all_tests, ensure_ascii=False))
+with open(EXPORT_JSON_NAME, 'w', encoding='utf-8') as f:
+    f.write(json.dumps(index_json, ensure_ascii=False))
 
+i=0
+for name in sorted(all_tests.keys()):
+    i+=1
+    print(str(i)+". "+EXPORT_JSON_NAME_GENERATOR(i, name)[0])
+    
+    with open(EXPORT_JSON_NAME_GENERATOR(i, name)[0], 'w', encoding='utf-8') as f:
+        f.write(json.dumps({"images": image_dict[name], "tasks": all_tests[name]}, ensure_ascii=False))
+
+print("END!")
 
 # print("TODO: Task resolving...")
 # import subprocess
