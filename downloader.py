@@ -351,6 +351,18 @@ for solution in links:
 
 print("Saving... ")
 
+
+import json
+i=0
+files_length = {}
+for name in sorted(all_tests.keys()):
+    i+=1
+    print(str(i)+". "+EXPORT_JSON_NAME_GENERATOR(i, name)[0])
+    
+    files_length[name]=len(json.dumps({"images": image_dict[name], "tasks": all_tests[name]}, ensure_ascii=False).encode('utf-8'))
+    with open(EXPORT_JSON_NAME_GENERATOR(i, name)[0], 'w', encoding='utf-8') as f:
+        f.write(json.dumps({"images": image_dict[name], "tasks": all_tests[name]}, ensure_ascii=False))
+
 index_json = {}
 #{
 #  name: {
@@ -358,24 +370,16 @@ index_json = {}
 #    with_answers: T/F
 #  }
 #}
+
 i=0
 for name in sorted(all_tests.keys()):
     if name[0] != '_':
         i+=1
-        index_json[name] = {"title": name, "json": EXPORT_JSON_NAME_GENERATOR(i, name)[1], "with_answers": is_with_answers[name]}
-print("0. "+EXPORT_JSON_NAME)
-import json
+        index_json[name] = {"title": name, "json": EXPORT_JSON_NAME_GENERATOR(i, name)[1], "with_answers": is_with_answers[name], "len":files_length[name]}
+print(str(i+1)+". "+EXPORT_JSON_NAME)
 with open(EXPORT_JSON_NAME, 'w', encoding='utf-8') as f:
     f.write(json.dumps(index_json, ensure_ascii=False))
-
-i=0
-for name in sorted(all_tests.keys()):
-    i+=1
-    print(str(i)+". "+EXPORT_JSON_NAME_GENERATOR(i, name)[0])
     
-    with open(EXPORT_JSON_NAME_GENERATOR(i, name)[0], 'w', encoding='utf-8') as f:
-        f.write(json.dumps({"images": image_dict[name], "tasks": all_tests[name]}, ensure_ascii=False))
-
 print("END!")
 
 # print("TODO: Task resolving...")
