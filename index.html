@@ -54,21 +54,47 @@
 			  }
 
 			};
+			
+			function downloadJSONFile(url, download_progress_callback, callback) {
+			  var xhr = new XMLHttpRequest();
+			  xhr.open('GET', url, true);
+
+			  xhr.onload = function() {
+				if (xhr.status === 200) {
+				  var json = xhr.response;
+				  if (callback) {
+					callback(JSON.parse(json));
+				  }
+				}
+			  };
+
+			  xhr.onprogress = function(event) {
+				if (event.lengthComputable) {
+				  var percentComplete = [10,1].map(x=>Math.floor((event.loaded / event.total) * 100/x)%10).join('')+'.'+[0.1,0.01,0.001].map(x=>Math.floor((event.loaded / event.total) * 100/x)%10).join('');
+				  if (download_progress_callback) {
+					download_progress_callback(percentComplete);
+				  }
+				}
+			  };
+
+			  xhr.send();
+			}
 		</script>
 		<script type="text/javascript">
 			var data;
 			var test='_';
 			
 			function onload() {
-				fetch('beautiful_output.json').then(response => response.text()).then((data) => {
+				downloadJSONFile('index.json', (x)=>(document.getElementById('test_name').innerHTML='<option value="" selected>Loading: '+x+'%</option>'),(data) => {
 					on_data_load(data);
 				});
 			}
 			
 			function on_data_load(s) {
-				data = JSON.parse(s);
-				document.getElementById('test_name').innerHTML='<option value="" selected>Выберите название теста</option>'+Object.keys(data).filter(x=>x[0]!='_').map(x=>'<option value="'+x+'">'+x+'</option>').join('')
-				Object.keys(data).filter(x=>x[0]!='_').map(x=>data[x]=data[x].sort((a,b)=>a.number-b.number));
+				data = s;
+				console.log(data);
+				document.getElementById('test_name').innerHTML='<option value="" selected>Выберите название теста</option>'+Object.keys(data).map(x=>'<option value="'+x+'">'+x+'</option>').join('')
+				
 				onupdate();
 			}
 			
@@ -82,7 +108,7 @@
 				solutions.map(s=>{
 					if(!d[s.value] ) d[s.value] = [];
 					d[s.value].push(s.result/s.result_max);
-					if (data._error_correction_) {
+					if (data[test].with_answers) {
 						max_value=s.value;
 						probability=(max_value!='UNCHECKED'?1:0);
 					} else if (s.result>max_result) {
@@ -105,7 +131,7 @@
 						text+='Написавшие &#34;'+x+'&#34; прошли тест на '+d[x].sort((a,b)=>b-a).map(x=>Math.round(x*100)+'%').join(' ') +'<br>';
 					});
 				}
-				if (data._error_correction_)
+				if (data[test].with_answers)
 					text='';//+='<hr>Значения ответов на тесты искажены в пользу верных'
 				
 				if (f)
@@ -113,17 +139,31 @@
 				else
 					return '<span style="color: #'+color_gen(probability)+';"  data-tooltip="'+text+'">['+Math.round(probability*100)+'%]</span>';
 			}
-			
+			var tests_cache = {};
 			function regen() {
+				//Object.keys(data).filter(x=>x[0]!='_').map(x=>data[x]=data[x].sort((a,b)=>a.number-b.number));
 				if (!test) {
 					document.getElementById('questions').innerHTML='';
 					return;
 				}
-				document.getElementById('questions').innerHTML=data[test].map(x=>''+
+				if (!tests_cache[test]) {
+					document.getElementById('questions').innerHTML='Loading...';
+					tests_cache[test] = 'Loading'
+					var _test=test;
+					downloadJSONFile(data[test].json, (x)=>(_test==test?document.getElementById('questions').innerHTML='Loading: <tt>'+x+'%</tt>':0),(data) => {
+						tests_cache[_test] = data;
+						regen();
+					});
+					return;
+				}
+				if (tests_cache[test]==='Loading') {return;}
+				
+				//debugger;
+				document.getElementById('questions').innerHTML=tests_cache[test].tasks.map(x=>''+
 					'<div>'+
 						'<div class="question_number"><div>'+x.number+'</div></div>'+
 						x.text.split('\n').map(y=>'<p>'+y+'</p>').join('')+
-						(x.image?'<p style="text-align: center;"><img src="data:image/png;base64,'+data['_image_'][x.image]+'" alt="'+x.image+'" /></p>':'')+
+						(x.image?'<p style="text-align: center;"><img src="data:image/png;base64,'+tests_cache[test].images[x.image]+'" alt="'+x.image+'" /></p>':'')+
 						'<div class="answers">'+
 							x.answers.map(y=>''+
 							'<div>'+
@@ -131,7 +171,7 @@
 								'<div>'+
 									(!y.text && !y.image?span_gen(x.type, y.solutions,1):'')+
 									y.text+
-									(y.image?'<img src="data:image/png;base64,'+data['_image_'][y.image]+'" alt="'+y.image+'" />':'')+
+									(y.image?'<img src="data:image/png;base64,'+tests_cache[test].images[y.image]+'" alt="'+y.image+'" />':'')+
 								'</div>'+
 							'</div>').join('')+
 						'</div>'+
