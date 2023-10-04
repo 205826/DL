@@ -1,3 +1,4 @@
+# downloader<T>
 
 # __/\\\\\\\\\\\\_____/\\\_____________________________/\\\\\\\\\\\\\\\________________        
 #  _\/\\\////////\\\__\/\\\_______________________/\\\_\///////\\\/////___/\\\__________       
@@ -14,6 +15,8 @@ import requests
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 
+from datetime import datetime
+print('start:', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f"))
 
 DB_PATH = "./__cache/"
 LINK_LIST_PATH = "./OTP_list.txt"
@@ -375,11 +378,11 @@ i=0
 for name in sorted(all_tests.keys()):
     if name[0] != '_':
         i+=1
-        index_json[name] = {"title": name, "json": EXPORT_JSON_NAME_GENERATOR(i, name)[1], "with_answers": is_with_answers[name], "len":files_length[name]}
+        index_json[name] = {"json": EXPORT_JSON_NAME_GENERATOR(i, name)[1], "with_answers": is_with_answers[name], "len":files_length[name]}
 print(str(i+1)+". "+EXPORT_JSON_NAME)
 with open(EXPORT_JSON_NAME, 'w', encoding='utf-8') as f:
     f.write(json.dumps(index_json, ensure_ascii=False))
-    
+
 print("END!")
 
 # print("TODO: Task resolving...")

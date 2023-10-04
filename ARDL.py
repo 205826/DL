@@ -1,0 +1,67 @@
+# Auto-runer DL<T>
+
+# _____/\\\\\\\\\_______/\\\\\\\\\______/\\\\\\\\\\\\_____/\\\_____________________________/\\\\\\\\\\\\\\\________________        
+#  ___/\\\\\\\\\\\\\___/\\\///////\\\___\/\\\////////\\\__\/\\\_______________________/\\\_\///////\\\/////___/\\\__________       
+#   __/\\\/////////\\\_\/\\\_____\/\\\___\/\\\______\//\\\_\/\\\____________________/\\\//________\/\\\_______\////\\\_______      
+#    _\/\\\_______\/\\\_\/\\\\\\\\\\\/____\/\\\_______\/\\\_\/\\\_________________/\\\//___________\/\\\__________\////\\\____     
+#     _\/\\\\\\\\\\\\\\\_\/\\\//////\\\____\/\\\_______\/\\\_\/\\\______________/\\\//______________\/\\\_____________\////\\\_    
+#      _\/\\\/////////\\\_\/\\\____\//\\\___\/\\\_______\/\\\_\/\\\_____________\////\\\_____________\/\\\______________/\\\//__   
+#       _\/\\\_______\/\\\_\/\\\_____\//\\\__\/\\\_______/\\\__\/\\\________________\////\\\__________\/\\\___________/\\\//_____  
+#        _\/\\\_______\/\\\_\/\\\______\//\\\_\/\\\\\\\\\\\\/___\/\\\\\\\\\\\\\\\_______\////\\\_______\/\\\________/\\\//________ 
+#         _\///________\///__\///________\///__\////////////_____\///////////////___________\///________\///________\///___________
+
+import requests
+from datetime import datetime
+import os
+def f7(seq):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+import time
+import csv
+import re
+def windows_to_git_bash_path(windows_path):
+    return re.sub(r'^([A-Z]):', lambda match: '/' + match.group(1).lower(), windows_path.replace('\\', '/'))
+def win_api_eval(args):
+    import subprocess
+    subprocess.check_call(args)
+
+
+LINK_LIST_PATH = "./OTP_list.txt"
+CSV_GOOGLE_SHEETS = "https://docs.google.com/spreadsheets/d/1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs/export?format=csv&id=1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs&gid=1422908853"
+DEBUG = False
+NEED_PRINT = True
+CMD_RUN_SH = ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "\"echo -e `cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"' \n./commit.sh >> log.txt` | bash\""]
+
+if not NEED_PRINT:
+    import sys
+    sys.stdout = open(os.devnull, 'w')
+
+session = requests.Session()
+print(CMD_RUN_SH)
+win_api_eval(CMD_RUN_SH)
+exit(0);
+for i in range(1):
+    print('D', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")+' ', end='',flush=True)
+    decoded_content = session.get(CSV_GOOGLE_SHEETS, timeout=30).content.decode('utf-8')
+    cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+    my_list = list(cr)
+    links = []
+    with open(LINK_LIST_PATH, "r", encoding='utf-8') as f:
+        for line in f:
+            if re.match(r'^https:\/\/onlinetestpad\.com\/[a-zA-Z0-9]{13}$', line.strip()):
+                links.append(line.strip())
+    old_len = len(links)
+    for row in my_list:
+        for cell in row:
+            if re.match(r'^https:\/\/onlinetestpad\.com\/[a-zA-Z0-9]{13}$', cell.strip()):
+                links.append(cell.strip())
+    links = f7(links)
+    if old_len!=len(links):
+        print('UPDATING...', end='',flush=True)
+        with open(LINK_LIST_PATH, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(links));
+        win_api_eval(CMD_RUN_SH)
+    print('OK', flush=True)
+    time.sleep(1);
