@@ -39,10 +39,8 @@ if not NEED_PRINT:
     sys.stdout = open(os.devnull, 'w')
 
 session = requests.Session()
-print(CMD_RUN_SH)
-win_api_eval(CMD_RUN_SH)
-exit(0);
-for i in range(1):
+
+for i in range(2):
     print('D', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")+' ', end='',flush=True)
     decoded_content = session.get(CSV_GOOGLE_SHEETS, timeout=30).content.decode('utf-8')
     cr = csv.reader(decoded_content.splitlines(), delimiter=',')
@@ -64,4 +62,4 @@ for i in range(1):
             f.write('\n'.join(links));
         win_api_eval(CMD_RUN_SH)
     print('OK', flush=True)
-    time.sleep(1);
+    time.sleep(30);
