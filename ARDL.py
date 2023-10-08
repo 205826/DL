@@ -25,14 +25,16 @@ def windows_to_git_bash_path(windows_path):
     return re.sub(r'^([A-Z]):', lambda match: '/' + match.group(1).lower(), windows_path.replace('\\', '/'))
 def win_api_eval(args):
     import subprocess
-    subprocess.check_call(args)
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    subprocess.call(args, startupinfo=si)
 
 
 LINK_LIST_PATH = "./OTP_list.txt"
 CSV_GOOGLE_SHEETS = "https://docs.google.com/spreadsheets/d/1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs/export?format=csv&id=1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs&gid=1422908853"
 DEBUG = False
 NEED_PRINT = True
-CMD_RUN_SH = ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "\"echo -e `cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"' \n./commit.sh >> log.txt` | bash\""]
+CMD_RUN_SH = ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "\"cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"';./commit.sh >> log.txt\""]
 
 if not NEED_PRINT:
     import sys
@@ -40,7 +42,9 @@ if not NEED_PRINT:
 
 session = requests.Session()
 
-for i in range(2):
+print('S', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f"), flush=True)
+time.sleep(30);
+while True:
     print('D', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")+' ', end='',flush=True)
     decoded_content = session.get(CSV_GOOGLE_SHEETS, timeout=30).content.decode('utf-8')
     cr = csv.reader(decoded_content.splitlines(), delimiter=',')
@@ -62,4 +66,4 @@ for i in range(2):
             f.write('\n'.join(links));
         win_api_eval(CMD_RUN_SH)
     print('OK', flush=True)
-    time.sleep(30);
+    time.sleep(60*60*2);

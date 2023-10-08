@@ -1,6 +1,6 @@
 python downloader.py >> log.txt
-cp -R json /d/git/DL/
-cp index.json /d/git/DL/
+cp -R json /d/git/DL/ >> log.txt
+cp index.json /d/git/DL/ >> log.txt
 cd /d/git/DL/
 git add --all
 timestamp() {
