@@ -25,16 +25,15 @@ def windows_to_git_bash_path(windows_path):
     return re.sub(r'^([A-Z]):', lambda match: '/' + match.group(1).lower(), windows_path.replace('\\', '/'))
 def win_api_eval(args):
     import subprocess
-    si = subprocess.STARTUPINFO()
-    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    subprocess.call(args, startupinfo=si)
+    subprocess.Popen(args, cwd=os.path.dirname(__file__))
+
 
 
 LINK_LIST_PATH = "./OTP_list.txt"
 CSV_GOOGLE_SHEETS = "https://docs.google.com/spreadsheets/d/1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs/export?format=csv&id=1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs&gid=1422908853"
 DEBUG = False
 NEED_PRINT = True
-CMD_RUN_SH = 'cd "'+os.path.dirname(__file__)+'" | commit.bat' # ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"';./commit.sh"]
+CMD_RUN_SH = 'commit.bat' # ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"';./commit.sh"]
 
 if not NEED_PRINT:
     import sys
