@@ -34,7 +34,7 @@ LINK_LIST_PATH = "./OTP_list.txt"
 CSV_GOOGLE_SHEETS = "https://docs.google.com/spreadsheets/d/1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs/export?format=csv&id=1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs&gid=1422908853"
 DEBUG = False
 NEED_PRINT = True
-CMD_RUN_SH = ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "\"cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"';./commit.sh >> log.txt\""]
+CMD_RUN_SH = 'cd "'+os.path.dirname(__file__)+'" | commit.bat' # ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"';./commit.sh"]
 
 if not NEED_PRINT:
     import sys
@@ -43,7 +43,7 @@ if not NEED_PRINT:
 session = requests.Session()
 
 print('S', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f"), flush=True)
-time.sleep(30);
+time.sleep(10);
 while True:
     print('D', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")+' ', end='',flush=True)
     decoded_content = session.get(CSV_GOOGLE_SHEETS, timeout=30).content.decode('utf-8')
