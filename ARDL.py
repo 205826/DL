@@ -24,7 +24,7 @@ import re
 
 def win_api_eval(args):
     import subprocess
-    subprocess.Popen(args, cwd=os.path.dirname(__file__))
+    subprocess.Popen(args, cwd=os.path.dirname(__file__), shell=True)
 
 
 
@@ -32,7 +32,7 @@ LINK_LIST_PATH = "./OTP_list.txt"
 CSV_GOOGLE_SHEETS = "https://docs.google.com/spreadsheets/d/1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs/export?format=csv&id=1HK9PHVXNUqVBaOeJLIoqog0mfiavo0IEN62jeeTr3Gs&gid=1422908853"
 DEBUG = False
 NEED_PRINT = True
-CMD_RUN_SH = 'commit.sh' 
+CMD_RUN_SH = '~/DL/commit.sh' 
 # ["C:\Program Files (x86)\Git\git-bash.exe", "-c", "cd '"+windows_to_git_bash_path(os.path.dirname(__file__))+"';./commit.sh"]
 
 if not NEED_PRINT:
@@ -41,28 +41,25 @@ if not NEED_PRINT:
 
 session = requests.Session()
 
-print('S', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f"), flush=True)
-time.sleep(10);
-while True:
-    print('D', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")+' ', end='',flush=True)
-    decoded_content = session.get(CSV_GOOGLE_SHEETS, timeout=30).content.decode('utf-8')
-    cr = csv.reader(decoded_content.splitlines(), delimiter=',')
-    my_list = list(cr)
-    links = []
-    with open(LINK_LIST_PATH, "r", encoding='utf-8') as f:
-        for line in f:
-            if re.match(r'^https:\/\/onlinetestpad\.com\/[a-zA-Z0-9]{13}$', line.strip()):
-                links.append(line.strip())
-    old_len = len(links)
-    for row in my_list:
-        for cell in row:
-            if re.match(r'^https:\/\/onlinetestpad\.com\/[a-zA-Z0-9]{13}$', cell.strip()):
-                links.append(cell.strip())
-    links = f7(links)
-    if old_len!=len(links):
-        print('UPDATING...', end='',flush=True)
-        with open(LINK_LIST_PATH, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(links));
-        win_api_eval(CMD_RUN_SH)
-    print('OK', flush=True)
-    time.sleep(60*60*2);
+
+print('S', datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")+' ', end='',flush=True)
+decoded_content = session.get(CSV_GOOGLE_SHEETS, timeout=30).content.decode('utf-8')
+cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+my_list = list(cr)
+links = []
+with open(LINK_LIST_PATH, "r", encoding='utf-8') as f:
+    for line in f:
+        if re.match(r'^https:\/\/onlinetestpad\.com\/[a-zA-Z0-9]{13}$', line.strip()):
+            links.append(line.strip())
+old_len = len(links)
+for row in my_list:
+    for cell in row:
+        if re.match(r'^https:\/\/onlinetestpad\.com\/[a-zA-Z0-9]{13}$', cell.strip()):
+            links.append(cell.strip())
+links = f7(links)
+if old_len!=len(links):
+    print('UPDATING...', end='',flush=True)
+    with open(LINK_LIST_PATH, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(links));
+    win_api_eval(CMD_RUN_SH)
+print('OK', flush=True)
