@@ -91,7 +91,7 @@
 			var test='_';
 			
 			function onload() {
-				downloadJSONFile('index.json', (x)=>(document.getElementById('test_name').innerHTML='<option value="" selected>Loading: '+x+'%</option>'),(data) => {
+				downloadJSONFile('index.json?t='+(+new Date()), (x)=>(document.getElementById('test_name').innerHTML='<option value="" selected>Loading: '+x+'%</option>'),(data) => {
 					on_data_load(data);
 				});
 			}
@@ -156,7 +156,7 @@
 					document.getElementById('questions').innerHTML='Loading...';
 					tests_cache[test] = 'Loading'
 					var _test=test;
-					downloadJSONFile(data[test].json, (x)=>(_test==test?document.getElementById('questions').innerHTML='Loading: <tt>'+x+'%</tt>':0),(data) => {
+					downloadJSONFile(data[test].json+'?t='+(+new Date()), (x)=>(_test==test?document.getElementById('questions').innerHTML='Loading: <tt>'+x+'%</tt>':0),(data) => {
 						tests_cache[_test] = data;
 						regen();
 					}, data[test].len);
