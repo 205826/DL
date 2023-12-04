@@ -14,6 +14,7 @@
         _\/\\\\\\\\\\\\/___\/\\\\\\\\\\\\\\\_______\////\\\_______\/\\\________/\\\//________ 
          _\////////////_____\///////////////___________\///________\///________\///___________
 -->
+		  <script src="mathjax.js"></script>
 		  <script>
 			let tooltipElem;
 
@@ -168,7 +169,7 @@
 				document.getElementById('questions').innerHTML=tests_cache[test].tasks.map(x=>''+
 					'<div>'+
 						'<div class="question_number"><div>'+x.number+'</div></div>'+
-						x.text.split('\n').map(y=>'<p>'+y+'</p>').join('')+
+						x.text.split('\n').map(y=>'<p>'+y+'</p>').join('').replace(/\$\$([\S\s]+?)\$\$/g,'<script type="math\/tex">$1<\/script>')+
 						(x.image?'<p style="text-align: center;"><img src="data:image/png;base64,'+tests_cache[test].images[x.image]+'" alt="'+x.image+'" /></p>':'')+
 						'<div class="answers">'+
 							x.answers.map(y=>''+
@@ -176,13 +177,14 @@
 								span_gen(x.type, y.solutions)+
 								'<div>'+
 									(!y.text && !y.image?span_gen(x.type, y.solutions,1):'')+
-									y.text+
+									y.text.replace(/\$\$([\S\s]+?)\$\$/g,'<script type="math\/tex">$1<\/script>')+
 									(y.image?'<img src="data:image/png;base64,'+tests_cache[test].images[y.image]+'" alt="'+y.image+'" />':'')+
 								'</div>'+
 							'</div>').join('')+
 						'</div>'+
 						'<div style="clear: left;"></div>'+
 					'</div>').join('');
+					 MathJax.Hub.Update(document.getElementById('questions'));
 			}
 			
 			function onupdate() {
@@ -281,6 +283,7 @@
 			.answers > div > div {
 				display: inline-block;
 				width: calc(100% - 51px);
+				overflow: auto;
 			}
 			    .tooltip {
 					position: fixed;
