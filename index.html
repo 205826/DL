@@ -118,22 +118,11 @@
 					if (data[test].with_answers) {
 						max_value=s.value;
 						probability=(max_value!='UNCHECKED'?1:0);
-					} else if (s.is_correct===0 && type!='strings' && s.value=='CHECKED') {
-						if(type=="singleselect"){
-							max_result=s.result_max;
-							max_value=s.value;
-							probability=0;
-						}else {
-							s.result/=3;
-							if (s.result>max_result) {
-								max_result=s.result;
-								max_value=s.value;
-								if (type!='strings')
-									probability=(max_value=='CHECKED'?max_result/s.result_max:1-max_result/s.result_max);
-							}
-						}
+					} else if (s.is_correct===0 && type=="singleselect" && s.value=='CHECKED'){
+						max_result=s.result_max;
+						max_value=s.value;
+						probability=0;
 					} else if (s.is_correct===1) {
-						
 						max_result=s.result_max;
 						max_value=s.value;
 						probability=(s.value=='CHECKED'?1:0);
