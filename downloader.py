@@ -81,7 +81,7 @@ for i in range(0,len(links)):
             if "div#dQuestions" in html_stack:
                 # init
                 if html_stack[-2] == "div#dQuestions":
-                    tasks.append({"question": "", "question_img": "", "answers": [], "errors": []})
+                    tasks.append({"question": "", "question_img": "", "answers": [], "errors": [], "is_correct": -1})
                     print(str(len(tasks))+' ', end='')
                 
                 # question
@@ -117,8 +117,13 @@ for i in range(0,len(links)):
                     if ("div.item" in html_stack)and("span" in html_stack)and (s == "img")and("data-formula" in dict(attrs)):
                         import urllib.parse
                         tasks[-1]["errors"][-1]["text"]+='$$'+urllib.parse.unquote(dict(attrs)["data-formula"])+'$$'
-                    
-                    
+                
+                # errors type 2 (only YES/NO)
+                if "div.otp-item-rw-container" in html_stack:
+                    if "div.alert.alert-mini.alert-danger" in html_stack:
+                        tasks[-1]["is_correct"] = 0;
+                    elif "div.alert.alert-mini.alert-success" in html_stack:
+                        tasks[-1]["is_correct"] = 1;
 
         def handle_data(self, data):
             # title
@@ -315,8 +320,8 @@ for solution in links:
         out_task["image"] = task["question_img"]
         out_task["answers"] = []
         for answer in task["answers"]:
-            out_task["answers"].append({"text": answer["text"], "image": answer["image"], "solutions": [{"id": i, "value": answer["value"], "result": solution["correct_answers"], "result_max": solution["total_answers"]}]})
-
+            out_task["answers"].append({"text": answer["text"], "image": answer["image"], "solutions": [{"id": i, "value": answer["value"], "result": solution["correct_answers"], "result_max": solution["total_answers"], "is_correct": task["is_correct"]}]})
+        
         
         def merge_answer(to, add):
             mflag = True
