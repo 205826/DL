@@ -185,7 +185,7 @@
 				if (tests_cache[test]==='Loading') {return;}
 				
 				//debugger;
-				document.getElementById('questions').innerHTML=tests_cache[test].tasks.map(x=>''+
+				document.getElementById('questions').innerHTML=tests_cache[test].tasks.sort((a,b)=>a.number-b.number).map(x=>''+
 					'<div>'+
 						'<div class="question_number"><div>'+x.number+'</div></div>'+
 						x.text.split('\n').map(y=>'<p>'+y+'</p>').join('').replace(/\$\$([\S\s]+?)\$\$/g,'<script type="math\/tex">$1<\/script>')+
