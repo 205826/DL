@@ -15,9 +15,10 @@
          _\////////////_____\///////////////___________\///________\///________\///___________
 -->
 		  <script src="mathjax.js"></script>
+		  <!--<script src="tesseract.min.js"></script>-->
 		  <script>
 			let tooltipElem;
-
+			
 			document.onmouseover = function(event) {
 			  let target = event.target;
 
@@ -90,8 +91,76 @@
 		<script type="text/javascript">
 			var data;
 			var test='_';
+			var worker;
+			var img_cache={};
+			function image_parser() {
+				Object.keys(img_cache).map(e=>{
+					if (document.getElementById(e) && img_cache[e]===''){
+						worker.recognize(document.getElementById(e).src).then((ret)=>{
+							img_cache[e]=' '+ret.data.text;
+							
+							setTimeout(image_parser,10);
+						});
+						return;
+					}
+				});
+				setTimeout(image_parser,10);
+			}
+			function input_screach() {
+				var s=screach.value.toLocaleLowerCase().replace(/[\s<>=^`|~$№§!"#%&''()*,+-\.\/:;?@[\]_{}«­·»]/g,' ').split(' ').filter(x=>x.length);
+				var out=[];
+				var aqc = Array.from(questions.children);
+				if (s.length) {
+					var arr1=aqc.map(x=>(x.children[1].innerText).toLocaleLowerCase().replace(/\s/g,' ').split(' ').filter(x=>x.length));
+					arr1.map((a,i)=>{
+						if (!s.filter(x=>a.indexOf(x)==-1).length)
+							out.push(i);
+					});
+					
+					if (!out.length)
+						arr1.map((a,i)=>{
+							if (!s.filter(x=>a.join('|').indexOf(x)==-1).length)
+								out.push(i);
+						});
+						
+					var arr2=[];
+					if (!out.length)
+						arr2=aqc.map(x=>(x.children[1].innerText+' '+(x.children[2].children[0].alt||'')).toLocaleLowerCase().replace(/\s/g,' ').split(' ').filter(x=>x.length));
+					
+					if (!out.length)
+						arr2.map((a,i)=>{
+							if (!s.filter(x=>a.indexOf(x)==-1).length)
+								out.push(i);
+						});
+					
+					if (!out.length)
+						arr2.map((a,i)=>{
+							if (!s.filter(x=>a.join('|').indexOf(x)==-1).length)
+								out.push(i);
+						});
+				}
+				if (s.length>0 && out.length==0)
+					screach.style.background = '#f003';
+				else
+					screach.style.background = '';
+				aqc.map((x,i)=>{
+					if (s.length>0 && out.length>0 && out.indexOf(i)==-1)
+						x.style.display="none";
+					else
+						x.style.display="";
+				});
+				//console.log(s,out);
+			}
+			
 			
 			function onload() {
+				//Tesseract.createWorker("rus", 1).then((e)=>{worker=e; image_parser();});
+				
+				
+
+				screach.addEventListener('input', input_screach);
+				screach.addEventListener('propertychange', input_screach);
+				
 				downloadJSONFile('index.json?t='+(+new Date()), (x)=>(document.getElementById('test_name').innerHTML='<option value="" selected>Loading: '+x+'%</option>'),(data) => {
 					on_data_load(data);
 				});
@@ -230,7 +299,6 @@
 				background-color: #0002;
 				width: calc(40% - 20px);
 				min-width: 150px;
-				display: none;
 			}
 			#test_name {
 				width: calc(60% - 20px);
@@ -309,7 +377,7 @@
 	<body onload="onload()" style="width:100%;height:100%;font-family:'Open Sans', sans-serif;margin:0;color:#fff;">
 		<div>
 			<div class="myh1">
-				<input type="text" value="" placeholder="Поиск" />
+				<input type="text" value="" placeholder="Поиск" id="screach" />
 				<select id="test_name" onchange="onupdate(this)">
 					<option value="" selected>Loading...</option>
 				</select>
